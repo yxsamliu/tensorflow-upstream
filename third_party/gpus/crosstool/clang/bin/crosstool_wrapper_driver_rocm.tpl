@@ -196,6 +196,7 @@ def InvokeHipcc(argv, log=False):
   # Need to investigate and fix.
   cmd = 'PATH=' + PREFIX_DIR + ':$PATH ' + cmd
   if log: Log(cmd)
+  print(cmd)
   return os.system(cmd)
 
 
@@ -220,6 +221,7 @@ def main():
     gpu_compiler_flags = [flag for flag in sys.argv[1:]
                                if not flag.startswith(('-pass-exit-codes'))]
     if args.rocm_log: Log('Link with hipcc: %s' % (' '.join([HIPCC_PATH] + gpu_compiler_flags)))
+    print(' '.join([HIPCC_PATH] + gpu_compiler_flags))
     return subprocess.call([HIPCC_PATH] + gpu_compiler_flags)
 
   # Strip our flags before passing through to the CPU compiler for files which
@@ -232,7 +234,7 @@ def main():
 
   # XXX: SE codes need to be built with gcc, but need this macro defined
   cpu_compiler_flags.append("-D__HIP_PLATFORM_HCC__")
-
+  print(' '.join([CPU_COMPILER] + cpu_compiler_flags))
   return subprocess.call([CPU_COMPILER] + cpu_compiler_flags)
 
 if __name__ == '__main__':
