@@ -196,7 +196,9 @@ def InvokeHipcc(argv, log=False):
 
   # TODO(zhengxq): for some reason, 'gcc' needs this help to find 'as'.
   # Need to investigate and fix.
-  cmd = 'PATH=' + PREFIX_DIR + ':$PATH ' + cmd
+  cmd = 'PATH=' + PREFIX_DIR + ':$PATH '\
+        + HIP_CLANG_ENV\
+        + cmd
   if log: Log(cmd)
   print(cmd)
   return os.system(cmd)
@@ -224,9 +226,11 @@ def main():
   if args.pass_exit_codes:
     gpu_compiler_flags = [flag for flag in sys.argv[1:]
                                if not flag.startswith(('-pass-exit-codes'))]
-    if args.rocm_log: Log('Link with hipcc: %s' % (' '.join([HIPCC_PATH] + gpu_compiler_flags)))
-    print(' '.join([HIPCC_PATH] + gpu_compiler_flags))
-    return subprocess.call([HIPCC_PATH] + gpu_compiler_flags)
+    cmd = HIP_CLANG_ENV.split() + [HIPCC_PATH] + gpu_compiler_flags
+    cmd_str = ' '.join(cmd)
+    if args.rocm_log: Log('Link with hipcc: %s' %(cmd_str))
+    print(cmd_str)
+    return os.system(cmd_str)
 
   # Strip our flags before passing through to the CPU compiler for files which
   # are not -x rocm. We can't just pass 'leftover' because it also strips -x.
