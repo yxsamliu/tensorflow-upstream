@@ -92,7 +92,6 @@ bazel test --config=rocm --test_tag_filters=-no_oss,-oss_serial,-no_gpu,-benchma
     -//tensorflow/python/kernel_tests:scatter_ops_test \
     -//tensorflow/python/kernel_tests:segment_reduction_ops_test \
     -//tensorflow/python/kernel_tests:self_adjoint_eig_op_test \
-    -//tensorflow/python/kernel_tests:split_op_test \
     -//tensorflow/python/kernel_tests:svd_op_test \
     -//tensorflow/python/kernel_tests:tensor_array_ops_test \
     -//tensorflow/python/kernel_tests:tensordot_op_test \
@@ -132,4 +131,4 @@ bazel test --config=rocm --test_tag_filters=-no_oss,-oss_serial,-no_gpu,-benchma
     -//tensorflow/python/estimator:linear_test \
     -//tensorflow/python/estimator:dnn_linear_combined_test
 
-# Note: temp. disabling 93 unit tests in order to esablish a CI baseline (2018/06/13)
+# Note: temp. disabling 92 unit tests in order to esablish a CI baseline (2018/06/13)
