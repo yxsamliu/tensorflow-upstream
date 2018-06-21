@@ -38,21 +38,11 @@ bazel test --config=rocm --test_tag_filters=-no_oss,-oss_serial,-no_gpu,-benchma
     --build_tests_only --test_output=errors --local_test_jobs=4 --config=opt \
     --run_under=//tensorflow/tools/ci_build/gpu_build:parallel_gpu_execute -- \
     //tensorflow/... -//tensorflow/compiler/... -//tensorflow/contrib/... \
-    -//tensorflow/python/eager:backprop_test \
     -//tensorflow/python/estimator:boosted_trees_test   \
     -//tensorflow/python/feature_column:feature_column_test \
     -//tensorflow/python/keras:activations_test \
-    -//tensorflow/python/keras:core_test \
-    -//tensorflow/python/keras:gru_test \
-    -//tensorflow/python/keras:local_test \
-    -//tensorflow/python/keras:lstm_test \
-    -//tensorflow/python/keras:model_subclassing_test \
     -//tensorflow/python/keras:normalization_test \
     -//tensorflow/python/keras:pooling_test \
-    -//tensorflow/python/keras:sequential_test \
-    -//tensorflow/python/keras:simplernn_test \
-    -//tensorflow/python/keras:training_eager_test \
-    -//tensorflow/python/keras:wrappers_test \
     -//tensorflow/python/kernel_tests:atrous_conv2d_test \
     -//tensorflow/python/kernel_tests:batch_matmul_op_test \
     -//tensorflow/python/kernel_tests:bias_op_test \
@@ -114,8 +104,6 @@ bazel test --config=rocm --test_tag_filters=-no_oss,-oss_serial,-no_gpu,-benchma
     -//tensorflow/python:virtual_gpu_test \
     -//tensorflow/python:function_def_to_graph_test \
     -//tensorflow/python:momentum_test \
-    -//tensorflow/python/keras:models_test \
-    -//tensorflow/python/keras:training_test \
     -//tensorflow/python/keras:cudnn_recurrent_test \
     -//tensorflow/python/kernel_tests/distributions:beta_test \
     -//tensorflow/python/kernel_tests/distributions:dirichlet_test \
@@ -126,4 +114,4 @@ bazel test --config=rocm --test_tag_filters=-no_oss,-oss_serial,-no_gpu,-benchma
     -//tensorflow/python/estimator:linear_test \
     -//tensorflow/python/estimator:dnn_linear_combined_test
 
-# Note: temp. disabling 87 unit tests in order to esablish a CI baseline (2018/06/13)
+# Note: temp. disabling 75 unit tests in order to esablish a CI baseline (2018/06/13)
