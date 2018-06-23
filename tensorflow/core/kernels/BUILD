@@ -52,7 +52,8 @@ load(
     "//third_party/mkl:build_defs.bzl",
     "if_mkl",
 )
-load("@local_config_cuda//cuda:build_defs.bzl", "if_cuda")
+load("@local_config_cuda//cuda:build_defs.bzl", "if_cuda", "if_cuda_is_configured")
+load("@local_config_rocm//rocm:build_defs.bzl", "if_rocm", "if_rocm_is_configured")
 
 config_setting(
     # Add "--define tensorflow_xsmm=1" to your build command to use libxsmm for
