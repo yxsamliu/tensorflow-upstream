@@ -151,6 +151,9 @@ struct DividesBy<std::complex<double>> {
   }
 };
 
+#endif
+
+#if GOOGLE_CUDA || TENSORFLOW_USE_ROCM 
 template <>
 struct DividesBy<float, Eigen::half> {
   float divisor;
