@@ -613,13 +613,13 @@ void LaunchBatchNarrowMatrixTransposeKernel(
     const T* input, const Dimension<3>& input_dims, T* output) {
   constexpr int NumThreads = TileLongSide;
   if (tile_size_i <= TileLongSide && tile_size_j <= TileShortSide) {
-    GPU_LAUNCH_KERNEL(SwapDimension1And2InTensor3UsingTiles<T, NumThreads,
-                                          TileLongSide, TileShortSide>,
+    GPU_LAUNCH_KERNEL((SwapDimension1And2InTensor3UsingTiles<T, NumThreads,
+                                          TileLongSide, TileShortSide>),
         dim3(total_tiles_count), dim3(NumThreads), 0, d.stream(),
         input, input_dims, output);
   } else {
-    GPU_LAUNCH_KERNEL(SwapDimension1And2InTensor3UsingTiles<T, NumThreads,
-                                          TileShortSide, TileLongSide>,
+    GPU_LAUNCH_KERNEL((SwapDimension1And2InTensor3UsingTiles<T, NumThreads,
+                                          TileShortSide, TileLongSide>),
         dim3(total_tiles_count), dim3(NumThreads), 0, d.stream(),
         input, input_dims, output);
   }
@@ -922,8 +922,8 @@ void RunSwapDimension1And2InTensor3(const GPUDevice& d, const T* input,
 
     int total_tiles_count = input_dims_in_tiles[0] * input_dims_in_tiles[1] *
                             input_dims_in_tiles[2];
-    GPU_LAUNCH_KERNEL(SwapDimension1And2InTensor3UsingTiles<T, kNumThreads,
-                                          kTileSize, kTileSize, conjugate>,
+    GPU_LAUNCH_KERNEL((SwapDimension1And2InTensor3UsingTiles<T, kNumThreads,
+                                          kTileSize, kTileSize, conjugate>),
         dim3(total_tiles_count), dim3(kNumThreads), 0, d.stream(),
         input, input_dims, output);
 
