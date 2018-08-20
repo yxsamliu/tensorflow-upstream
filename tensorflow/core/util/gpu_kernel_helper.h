@@ -111,7 +111,7 @@ __host__ __device__ inline double tf_max(double x, double y) {
 }
 
 // ROCM TODO re-enable them after adding fp16 support logic
-#if GOOGLE_CUDA
+#if GOOGLE_CUDA || (__HIPCC__ && !__HCC__)
 __device__ inline Eigen::half GpuShuffleSync(unsigned mask, Eigen::half value,
                                               int src_lane,
                                               int width = warpSize) {
