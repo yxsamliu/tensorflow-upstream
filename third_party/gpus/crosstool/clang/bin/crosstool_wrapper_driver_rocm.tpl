@@ -36,7 +36,7 @@ GCC_HOST_COMPILER_PATH = ('%{gcc_host_compiler_path}')
 HIPCC_PATH = '%{hipcc_path}'
 PREFIX_DIR = os.path.dirname(GCC_HOST_COMPILER_PATH)
 HIP_CLANG_ENV = 'HIP_CLANG_PATH=/usr/local/hip/bin '\
-                + 'DEVICE_LIB_PATH=/home/yaxunl/git/hip/rel.devlib/dist/lib '\
+                + 'DEVICE_LIB_PATH=/home/yaxunl/git/rocdl/rel/dist/lib '\
                 + 'HIPCC_VERBOSE=7 '
 def Log(s):
   print('gpus/crosstool: {0}'.format(s))
@@ -214,6 +214,8 @@ def main():
   parser.add_argument('-pass-exit-codes', action='store_true')
   args, leftover = parser.parse_known_args(sys.argv[1:])
 
+  print('PWD=' + os.getcwd())
+  
   if args.x and args.x[0] == 'rocm':
     if args.rocm_log: Log('-x rocm')
     leftover = [pipes.quote(s) for s in leftover]
