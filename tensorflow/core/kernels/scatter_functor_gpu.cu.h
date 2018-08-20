@@ -149,7 +149,7 @@ struct ScatterScalarFunctor<GPUDevice, T, Index, op> {
     const Index synthesized_updates_size = indices_size * params.dimension(1);
     GpuLaunchConfig config = GetGpuLaunchConfig(synthesized_updates_size, d);
     GPU_LAUNCH_KERNEL(
-        scatter_op_gpu::ScatterScalarOpCustomKernel<T, Index, op>,
+        (scatter_op_gpu::ScatterScalarOpCustomKernel<T, Index, op>),
         dim3(config.block_count), dim3(config.thread_per_block), 0, d.stream(),
         params.data(), update.data(), indices.data(), first_dim_size,
         indices_size, synthesized_updates_size);
