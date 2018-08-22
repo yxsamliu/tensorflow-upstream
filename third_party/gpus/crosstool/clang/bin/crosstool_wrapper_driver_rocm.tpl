@@ -226,7 +226,17 @@ def main():
   if args.pass_exit_codes:
     gpu_compiler_flags = [flag for flag in sys.argv[1:]
                                if not flag.startswith(('-pass-exit-codes'))]
-    cmd = HIP_CLANG_ENV.split() + [HIPCC_PATH] + gpu_compiler_flags
+
+    # special handling for $ORIGIN
+    # - guard every argument with ''
+    # - replace $ORIGIN with \$ORIGIN so it won't be evaluated by hipcc which
+    #   is a bash script itself
+    modified_gpu_compiler_flags = []
+    for flag in gpu_compiler_flags:
+      modified_gpu_compiler_flags.append(
+          "'" + flag.replace('$ORIGIN', '\$ORIGIN') + "'")
+
+    cmd = HIP_CLANG_ENV.split() + [HIPCC_PATH] + modified_gpu_compiler_flags
     cmd_str = ' '.join(cmd)
     if args.rocm_log: Log('Link with hipcc: %s' %(cmd_str))
     print(cmd_str)
