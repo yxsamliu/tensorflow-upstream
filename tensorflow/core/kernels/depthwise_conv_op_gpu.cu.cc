@@ -1754,7 +1754,9 @@ void LaunchDepthwiseConvBackpropFilterOp<GpuDevice, T>::operator()(
                                "terGPULaunch failed"));
 }
 
+#if GOOGLE_CUDA
 template struct LaunchDepthwiseConvBackpropFilterOp<GpuDevice, Eigen::half>;
+#endif
 template struct LaunchDepthwiseConvBackpropFilterOp<GpuDevice, float>;
 template struct LaunchDepthwiseConvBackpropFilterOp<GpuDevice, double>;
 }  // namespace tensorflow
