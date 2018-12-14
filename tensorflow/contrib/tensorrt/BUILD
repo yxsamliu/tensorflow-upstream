@@ -13,15 +13,15 @@ load(
     "//tensorflow:tensorflow.bzl",
     "tf_cc_test",
     "tf_copts",
-    "tf_gpu_library",
+    "tf_cuda_library",
     "tf_custom_op_library",
     "tf_custom_op_library_additional_deps",
     "tf_gen_op_libs",
     "tf_gen_op_wrapper_py",
 )
-load("//tensorflow:tensorflow.bzl", "gpu_py_test")
-load("//tensorflow:tensorflow.bzl", "gpu_py_tests")
-load("//tensorflow:tensorflow.bzl", "tf_gpu_cc_test")
+load("//tensorflow:tensorflow.bzl", "cuda_py_test")
+load("//tensorflow:tensorflow.bzl", "cuda_py_tests")
+load("//tensorflow:tensorflow.bzl", "tf_cuda_cc_test")
 load("//tensorflow:tensorflow.bzl", "tf_custom_op_py_library")
 load("//tensorflow:tensorflow.bzl", "tf_py_wrap_cc")
 load(
@@ -33,7 +33,7 @@ exports_files(glob([
     "test/testdata/*",
 ]))
 
-tf_gpu_cc_test(
+tf_cuda_cc_test(
     name = "tensorrt_test_cc",
     size = "small",
     srcs = ["tensorrt_test.cc"],
@@ -66,7 +66,7 @@ tf_custom_op_library(
     ]),
 )
 
-tf_gpu_library(
+tf_cuda_library(
     name = "trt_shape_function",
     srcs = ["shape_fn/trt_shfn.cc"],
     hdrs = ["shape_fn/trt_shfn.h"],
@@ -114,7 +114,7 @@ tf_gen_op_libs(
     ],
 )
 
-tf_gpu_library(
+tf_cuda_library(
     name = "trt_logging",
     srcs = ["log/trt_logger.cc"],
     hdrs = ["log/trt_logger.h"],
@@ -212,7 +212,7 @@ tf_py_wrap_cc(
     ],
 )
 
-tf_gpu_library(
+tf_cuda_library(
     name = "trt_resources",
     srcs = [
         "resources/trt_int8_calibrator.cc",
@@ -235,7 +235,7 @@ tf_gpu_library(
     ]),
 )
 
-tf_gpu_library(
+tf_cuda_library(
     name = "trt_allocator",
     srcs = ["resources/trt_allocator.cc"],
     hdrs = ["resources/trt_allocator.h"],
@@ -264,7 +264,7 @@ tf_cc_test(
 )
 
 # Library for the node-level conversion portion of TensorRT operation creation
-tf_gpu_library(
+tf_cuda_library(
     name = "trt_conversion",
     srcs = [
         "convert/convert_graph.cc",
@@ -305,7 +305,7 @@ tf_gpu_library(
     ]) + tf_custom_op_library_additional_deps(),
 )
 
-tf_gpu_cc_test(
+tf_cuda_cc_test(
     name = "convert_graph_test",
     size = "medium",
     srcs = ["convert/convert_graph_test.cc"],
@@ -335,7 +335,7 @@ tf_gpu_cc_test(
     ]),
 )
 
-tf_gpu_cc_test(
+tf_cuda_cc_test(
     name = "convert_nodes_test",
     size = "medium",
     srcs = ["convert/convert_nodes_test.cc"],
@@ -406,7 +406,7 @@ tf_cc_test(
 )
 
 # Library for the plugin factory
-tf_gpu_library(
+tf_cuda_library(
     name = "trt_plugins",
     srcs = [
         "plugin/trt_plugin.cc",
@@ -426,7 +426,7 @@ tf_gpu_library(
     ]),
 )
 
-tf_gpu_cc_test(
+tf_cuda_cc_test(
     name = "trt_plugin_factory_test",
     size = "small",
     srcs = ["plugin/trt_plugin_factory_test.cc"],
@@ -457,7 +457,7 @@ py_library(
     ],
 )
 
-gpu_py_tests(
+cuda_py_tests(
     name = "trt_convert_test",
     srcs = ["python/trt_convert_test.py"],
     additional_deps = [
@@ -482,7 +482,7 @@ gpu_py_tests(
     ],
 )
 
-gpu_py_tests(
+cuda_py_tests(
     name = "tf_trt_integration_test",
     srcs = [
         "test/base_test.py",
@@ -513,7 +513,7 @@ gpu_py_tests(
     ],
 )
 
-gpu_py_tests(
+cuda_py_tests(
     name = "tf_trt_integration_test_no_oss",
     srcs = [
         "test/unary_test.py",
@@ -532,7 +532,7 @@ gpu_py_tests(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "quantization_mnist_test",
     srcs = ["test/quantization_mnist_test.py"],
     additional_deps = [

@@ -4,7 +4,7 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
-load("//tensorflow:tensorflow.bzl", "gpu_py_test")
+load("//tensorflow:tensorflow.bzl", "cuda_py_test")
 load("//tensorflow:tensorflow.bzl", "py_test")
 
 py_test(
@@ -26,7 +26,7 @@ py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "copy_to_device_test",
     size = "small",
     srcs = ["copy_to_device_test.py"],
@@ -212,18 +212,6 @@ py_test(
 )
 
 py_test(
-    name = "has_indefinite_repeat_test",
-    srcs = ["has_indefinite_repeat_test.py"],
-    srcs_version = "PY2AND3",
-    deps = [
-        "//tensorflow/python/data/experimental/ops:has_indefinite_repeat",
-        "//tensorflow/python/data/kernel_tests:test_base",
-        "//tensorflow/python/data/ops:dataset_ops",
-        "@absl_py//absl/testing:parameterized",
-    ],
-)
-
-py_test(
     name = "ignore_errors_test",
     srcs = ["ignore_errors_test.py"],
     srcs_version = "PY2AND3",
@@ -378,6 +366,18 @@ py_test(
 )
 
 py_test(
+    name = "cardinality_test",
+    srcs = ["cardinality_test.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        "//tensorflow/python/data/experimental/ops:cardinality",
+        "//tensorflow/python/data/kernel_tests:test_base",
+        "//tensorflow/python/data/ops:dataset_ops",
+        "@absl_py//absl/testing:parameterized",
+    ],
+)
+
+py_test(
     name = "override_threadpool_test",
     size = "small",
     srcs = ["override_threadpool_test.py"],
@@ -445,7 +445,7 @@ py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "prefetch_to_device_test",
     size = "small",
     srcs = ["prefetch_to_device_test.py"],
@@ -545,6 +545,7 @@ py_test(
         "//tensorflow/python:dtypes",
         "//tensorflow/python:errors",
         "//tensorflow/python:framework_test_lib",
+        "//tensorflow/python:script_ops",
         "//tensorflow/python:sparse_tensor",
         "//tensorflow/python/data/experimental/ops:scan_ops",
         "//tensorflow/python/data/kernel_tests:test_base",
@@ -711,6 +712,17 @@ py_test(
         "//tensorflow/python:errors",
         "//tensorflow/python:util",
         "//tensorflow/python/data/experimental/ops:unique",
+        "//tensorflow/python/data/kernel_tests:test_base",
+        "//tensorflow/python/data/ops:dataset_ops",
+    ],
+)
+
+cuda_py_test(
+    name = "wrap_unwrap_test",
+    size = "small",
+    srcs = ["wrap_unwrap_test.py"],
+    additional_deps = [
+        "//tensorflow/python:client_testlib",
         "//tensorflow/python/data/kernel_tests:test_base",
         "//tensorflow/python/data/ops:dataset_ops",
     ],

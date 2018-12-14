@@ -18,14 +18,14 @@ package(
     default_visibility = [":internal"],
 )
 
-load("//tensorflow:tensorflow.bzl", "tf_gpu_cc_test")
-load("//tensorflow:tensorflow.bzl", "gpu_py_test")
+load("//tensorflow:tensorflow.bzl", "tf_cuda_cc_test")
+load("//tensorflow:tensorflow.bzl", "cuda_py_test")
 load("//tensorflow/compiler/aot:tfcompile.bzl", "tf_library")
 load("//tensorflow/compiler/tests:build_defs.bzl", "tf_xla_py_test")
 load("//tensorflow/compiler/tests:build_defs.bzl", "generate_backend_suites")
 load(
     "//tensorflow/core:platform/default/build_config_root.bzl",
-    "tf_gpu_tests_tags",
+    "tf_cuda_tests_tags",
 )
 
 generate_backend_suites()
@@ -408,13 +408,6 @@ tf_xla_py_test(
     name = "eager_test",
     size = "large",
     srcs = ["eager_test.py"],
-    disabled_backends = [
-        # TODO(b/78199195) Support XLA CPU devices in eager runtime
-        "cpu",
-        "cpu_ondemand",
-        # TODO(b/78468222) Enable GPU backend
-        "gpu",
-    ],
     deps = [
         ":xla_test",
         "//tensorflow/python:array_ops",
@@ -1033,7 +1026,7 @@ tf_xla_py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "xla_device_gpu_test",
     size = "small",
     srcs = ["xla_device_gpu_test.py"],
@@ -1047,7 +1040,7 @@ gpu_py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "jit_test",
     size = "medium",
     srcs = ["jit_test.py"],
@@ -1066,7 +1059,7 @@ gpu_py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "dense_layer_test",
     size = "small",
     srcs = ["dense_layer_test.py"],
@@ -1105,14 +1098,14 @@ cc_library(
     ],
 )
 
-tf_gpu_cc_test(
+tf_cuda_cc_test(
     name = "randomized_tests",
     size = "large",
     # This test is randomized, so only run it if explicitly requested.
     tags = [
         "manual",
         "notap",
-    ] + tf_gpu_tests_tags(),
+    ] + tf_cuda_tests_tags(),
     deps = [":randomized_tests_library"],
 )
 
@@ -1130,7 +1123,7 @@ py_library(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "lstm_test",
     srcs = ["lstm_test.py"],
     additional_deps = [

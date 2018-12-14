@@ -23,7 +23,7 @@ exports_files(["LICENSE"])
 exports_files(["platform/base.i"])
 
 load("//tensorflow:tensorflow.bzl", "if_not_windows")
-load("//tensorflow:tensorflow.bzl", "tf_gpu_library")
+load("//tensorflow:tensorflow.bzl", "tf_cuda_library")
 load("//tensorflow:tensorflow.bzl", "tf_gen_op_wrapper_py")
 load("//tensorflow:tensorflow.bzl", "py_test")
 load("//tensorflow:tensorflow.bzl", "tf_py_test")
@@ -33,8 +33,8 @@ load("//tensorflow:tensorflow.bzl", "tf_py_wrap_cc")
 load("//tensorflow:tensorflow.bzl", "tf_cc_shared_object")
 load("//tensorflow:tensorflow.bzl", "tf_native_cc_binary")
 load("//tensorflow:tensorflow.bzl", "tf_custom_op_library_additional_deps_impl")
-load("//tensorflow:tensorflow.bzl", "gpu_py_test")
-load("//tensorflow:tensorflow.bzl", "gpu_py_tests")
+load("//tensorflow:tensorflow.bzl", "cuda_py_test")
+load("//tensorflow:tensorflow.bzl", "cuda_py_tests")
 load("//tensorflow/core:platform/default/build_config.bzl", "pyx_library")
 load("//tensorflow/core:platform/default/build_config.bzl", "tf_proto_library")
 load("//tensorflow/core:platform/default/build_config.bzl", "tf_proto_library_py")
@@ -145,6 +145,7 @@ py_library(
         "//tensorflow/lite/python:lite",
         "//tensorflow/python/compat",
         "//tensorflow/python/data",
+        "//tensorflow/python/distribute",
         "//tensorflow/python/distribute:estimator_training",
         "//tensorflow/python/eager:def_function",
         "//tensorflow/python/feature_column:feature_column_py",
@@ -517,6 +518,17 @@ py_test(
 py_test(
     name = "deprecation_test",
     srcs = ["util/deprecation_test.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":client_testlib",
+        ":platform",
+        ":util",
+    ],
+)
+
+py_test(
+    name = "dispatch_test",
+    srcs = ["util/dispatch_test.py"],
     srcs_version = "PY2AND3",
     deps = [
         ":client_testlib",
@@ -1221,7 +1233,7 @@ py_library(
     ],
 )
 
-gpu_py_tests(
+cuda_py_tests(
     name = "framework_function_test",
     size = "medium",
     srcs = ["framework/function_test.py"],
@@ -2183,7 +2195,6 @@ py_library(
         ":control_flow_util_v2",
         ":dtypes",
         ":framework_ops",
-        ":framework_test_lib",
         ":function_def_to_graph",
         ":functional_ops_gen",
         ":gradients_impl",
@@ -2859,6 +2870,7 @@ py_test(
         ":framework_test_lib",
         ":sparse_ops",
         ":sparse_tensor",
+        "@absl_py//absl/testing:parameterized",
     ],
 )
 
@@ -3205,7 +3217,7 @@ py_library(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "bitwise_ops_test",
     size = "small",
     srcs = ["ops/bitwise_ops_test.py"],
@@ -3218,12 +3230,13 @@ gpu_py_test(
     tags = ["no_windows"],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "control_flow_ops_test",
     size = "small",
     srcs = ["ops/control_flow_ops_test.py"],
     additional_deps = [
         ":array_ops",
+        ":cond_v2",
         ":control_flow_ops",
         ":embedding_ops",
         ":framework_for_generated_wrappers",
@@ -3239,10 +3252,12 @@ gpu_py_test(
         ":util",
         ":variable_scope",
         ":variables",
+        ":while_v2",
+        "//tensorflow/python/eager:def_function",
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "gradient_checker_test",
     size = "medium",
     srcs = ["ops/gradient_checker_test.py"],
@@ -3258,7 +3273,7 @@ gpu_py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "gradient_checker_v2_test",
     size = "medium",
     srcs = ["ops/gradient_checker_v2_test.py"],
@@ -3274,7 +3289,7 @@ gpu_py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "gradients_test",
     size = "medium",
     srcs = ["ops/gradients_test.py"],
@@ -3306,7 +3321,7 @@ gpu_py_test(
     tags = ["no_oss"],  # b/118709825
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "histogram_ops_test",
     size = "small",
     srcs = ["ops/histogram_ops_test.py"],
@@ -3321,7 +3336,7 @@ gpu_py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "image_grad_test",
     size = "medium",
     srcs = ["ops/image_grad_test.py"],
@@ -3334,7 +3349,7 @@ gpu_py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "image_ops_test",
     size = "medium",
     srcs = ["ops/image_ops_test.py"],
@@ -3359,7 +3374,7 @@ gpu_py_test(
     shard_count = 5,
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "init_ops_test",
     size = "small",
     srcs = ["ops/init_ops_test.py"],
@@ -3373,7 +3388,7 @@ gpu_py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "math_grad_test",
     size = "small",
     srcs = ["ops/math_grad_test.py"],
@@ -3382,12 +3397,15 @@ gpu_py_test(
         ":client_testlib",
         ":framework_for_generated_wrappers",
         ":math_ops",
+        "//tensorflow/python/eager:backprop",
+        "//tensorflow/python/eager:context",
+        "//tensorflow/python/eager:execution_callbacks",
         "//third_party/py/numpy",
     ],
     tags = ["no_windows_gpu"],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "math_ops_test",
     size = "small",
     srcs = ["ops/math_ops_test.py"],
@@ -3405,7 +3423,7 @@ gpu_py_test(
     tags = ["no_windows_gpu"],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "nn_batchnorm_test",
     size = "medium",
     srcs = ["ops/nn_batchnorm_test.py"],
@@ -3424,7 +3442,7 @@ gpu_py_test(
     tags = ["no_windows"],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "nn_fused_batchnorm_test",
     size = "large",
     srcs = ["ops/nn_fused_batchnorm_test.py"],
@@ -3440,7 +3458,7 @@ gpu_py_test(
     shard_count = 16,
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "nn_test",
     size = "medium",
     srcs = ["ops/nn_test.py"],
@@ -3460,7 +3478,7 @@ gpu_py_test(
     tags = ["no_windows"],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "nn_xent_test",
     size = "medium",
     srcs = ["ops/nn_xent_test.py"],
@@ -3474,7 +3492,7 @@ gpu_py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "special_math_ops_test",
     size = "small",
     srcs = ["ops/special_math_ops_test.py"],
@@ -3497,13 +3515,13 @@ py_library(
         exclude = [
             "**/*test*",
             "training/checkpointable/**/*.py",
+            "training/saving/**/*.py",
             # The following targets have their own build rules (same name as the
             # file):
             "training/basic_session_run_hooks.py",
             "training/checkpoint_management.py",
             "training/distribute.py",
             "training/distribution_strategy_context.py",
-            "training/saveable_object.py",
             "training/saver.py",
             "training/session_run_hook.py",
             "training/training_util.py",
@@ -3579,12 +3597,6 @@ py_library(
 )
 
 py_library(
-    name = "saveable_object",
-    srcs = ["training/saveable_object.py"],
-    srcs_version = "PY2AND3",
-)
-
-py_library(
     name = "checkpoint_management",
     srcs = ["training/checkpoint_management.py"],
     deps = [
@@ -3637,7 +3649,6 @@ py_library(
         ":platform",
         ":pywrap_tensorflow",
         ":resource_variable_ops",
-        ":saveable_object",
         ":session",
         ":state_ops",
         ":string_ops",
@@ -3647,6 +3658,8 @@ py_library(
         "//tensorflow/core:protos_all_py",
         "//tensorflow/python/eager:context",
         "//tensorflow/python/training/checkpointable:base",
+        "//tensorflow/python/training/saving:saveable_object",
+        "//tensorflow/python/training/saving:saveable_object_util",
         "//third_party/py/numpy",
         "@six_archive//:six",
     ],
@@ -3820,6 +3833,7 @@ py_library(
     srcs_version = "PY2AND3",
     deps = [
         ":util",
+        "//tensorflow/python:framework_ops",
         "//tensorflow/python/eager:context",
         "@six_archive//:six",
     ],
@@ -3969,7 +3983,7 @@ cc_library(
     ],
 )
 
-gpu_py_tests(
+cuda_py_tests(
     name = "device_lib_test",
     size = "small",
     srcs = [
@@ -3997,7 +4011,7 @@ cc_library(
     ],
 )
 
-tf_gpu_library(
+tf_cuda_library(
     name = "tf_session_helper",
     srcs = ["client/tf_session_helper.cc"],
     hdrs = ["client/tf_session_helper.h"],
@@ -4167,9 +4181,22 @@ genrule(
 
 # Get the import library of  _pywrap_tensorflow_internal.dll
 filegroup(
-    name = "pywrap_tensorflow_import_lib_file",
+    name = "get_pywrap_tensorflow_import_lib_file",
     srcs = [":_pywrap_tensorflow_internal.so"],
     output_group = "interface_library",
+)
+
+# Rename the import library for _pywrap_tensorflow_internal.pyd to _pywrap_tensorflow_internal.lib
+# (It was _pywrap_tensorflow_internal.so.if.lib).
+genrule(
+    name = "pywrap_tensorflow_import_lib_file",
+    srcs = [":get_pywrap_tensorflow_import_lib_file"],
+    outs = ["_pywrap_tensorflow_internal.lib"],
+    cmd = select({
+        "//tensorflow:windows": "cp -f $< $@",
+        "//conditions:default": "touch $@",  # Just a placeholder for Unix platforms
+    }),
+    visibility = ["//visibility:public"],
 )
 
 # Create a cc_import rule for the import library of _pywrap_tensorflow_internal.dll
@@ -4339,7 +4366,7 @@ tf_py_test(
     grpc_enabled = True,
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "localhost_cluster_performance_test",
     size = "medium",
     srcs = [
@@ -4394,7 +4421,7 @@ py_library(
 )
 
 # Just used by tests.
-tf_gpu_library(
+tf_cuda_library(
     name = "construction_fails_op",
     srcs = ["client/test_construction_fails_op.cc"],
     deps = [
@@ -4508,7 +4535,7 @@ tf_py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "timeline_test",
     size = "small",
     srcs = ["client/timeline_test.py"],
@@ -4521,7 +4548,7 @@ gpu_py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "virtual_gpu_test",
     size = "small",
     srcs = ["client/virtual_gpu_test.py"],
@@ -4603,7 +4630,7 @@ py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "adam_test",
     size = "small",
     srcs = ["training/adam_test.py"],
@@ -4619,7 +4646,7 @@ gpu_py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "moving_averages_test",
     size = "small",
     srcs = [
@@ -4639,7 +4666,7 @@ gpu_py_test(
     tags = ["notsan"],
 )
 
-gpu_py_tests(
+cuda_py_tests(
     name = "training_tests",
     size = "medium",
     srcs = [
@@ -4712,7 +4739,7 @@ py_library(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "saver_test",
     size = "medium",
     srcs = [
@@ -4749,7 +4776,7 @@ gpu_py_test(
     tags = ["multi_gpu"],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "checkpoint_management_test",
     size = "small",
     srcs = [
@@ -4825,7 +4852,7 @@ py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "session_manager_test",
     size = "medium",  # TODO(irving): Can this be made small?
     srcs = ["training/session_manager_test.py"],
@@ -5256,7 +5283,7 @@ py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "layers_normalization_test",
     size = "medium",
     srcs = ["layers/normalization_test.py"],
@@ -5306,7 +5333,7 @@ py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "accumulate_n_benchmark",
     size = "large",
     srcs = ["ops/accumulate_n_benchmark.py"],
@@ -5325,7 +5352,7 @@ gpu_py_test(
     main = "ops/accumulate_n_benchmark.py",
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "batch_norm_benchmark",
     srcs = ["ops/batch_norm_benchmark.py"],
     additional_deps = [
@@ -5345,7 +5372,7 @@ gpu_py_test(
     main = "ops/batch_norm_benchmark.py",
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "concat_benchmark",
     srcs = ["ops/concat_benchmark.py"],
     additional_deps = [
@@ -5362,7 +5389,7 @@ gpu_py_test(
     main = "ops/concat_benchmark.py",
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "control_flow_ops_benchmark",
     srcs = ["ops/control_flow_ops_benchmark.py"],
     additional_deps = [
@@ -5375,7 +5402,7 @@ gpu_py_test(
     main = "ops/control_flow_ops_benchmark.py",
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "conv2d_benchmark",
     size = "large",
     srcs = ["ops/conv2d_benchmark.py"],
@@ -5395,7 +5422,7 @@ gpu_py_test(
     main = "ops/conv2d_benchmark.py",
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "split_benchmark",
     srcs = ["ops/split_benchmark.py"],
     additional_deps = [
@@ -5413,7 +5440,7 @@ gpu_py_test(
     main = "ops/split_benchmark.py",
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "transpose_benchmark",
     size = "medium",
     srcs = ["ops/transpose_benchmark.py"],
@@ -5432,7 +5459,7 @@ gpu_py_test(
     main = "ops/transpose_benchmark.py",
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "matmul_benchmark",
     size = "medium",
     srcs = ["ops/matmul_benchmark.py"],
@@ -5453,7 +5480,7 @@ gpu_py_test(
     main = "ops/matmul_benchmark.py",
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "matmul_benchmark_test",
     size = "medium",
     srcs = ["ops/matmul_benchmark_test.py"],
@@ -5475,7 +5502,7 @@ gpu_py_test(
     tags = ["no_pip"],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "session_benchmark",
     srcs = ["client/session_benchmark.py"],
     additional_deps = [
@@ -5492,7 +5519,7 @@ gpu_py_test(
     main = "client/session_benchmark.py",
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "nn_grad_test",
     size = "small",
     srcs = ["ops/nn_grad_test.py"],
@@ -5572,7 +5599,7 @@ py_library(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "cluster_test",
     size = "small",
     srcs = [
@@ -5681,7 +5708,7 @@ py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "constant_folding_test",
     size = "medium",
     srcs = [
@@ -5704,7 +5731,7 @@ gpu_py_test(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "layout_optimizer_test",
     size = "medium",
     srcs = [
@@ -5840,7 +5867,7 @@ py_library(
     ],
 )
 
-gpu_py_test(
+cuda_py_test(
     name = "nccl_ops_test",
     size = "small",
     srcs = ["ops/nccl_ops_test.py"],
