@@ -158,6 +158,7 @@ cc_library(
         "bidirectional_sequence_lstm.cc",
         "bidirectional_sequence_rnn.cc",
         "cast.cc",
+        "ceil.cc",
         "comparisons.cc",
         "concatenation.cc",
         "conv.cc",
@@ -221,6 +222,7 @@ cc_library(
         "transpose_conv.cc",
         "unidirectional_sequence_lstm.cc",
         "unidirectional_sequence_rnn.cc",
+        "unique.cc",
         "unpack.cc",
         "zeros_like.cc",
     ],
@@ -351,6 +353,7 @@ tf_cc_test(
         ":builtin_ops",
         "//tensorflow/lite:framework",
         "//tensorflow/lite/kernels:test_util",
+        "//tensorflow/lite/kernels/internal:types",
         "@com_google_googletest//:gtest",
         "@flatbuffers",
     ],
@@ -512,6 +515,7 @@ tf_cc_test(
         ":builtin_ops",
         "//tensorflow/lite:framework",
         "//tensorflow/lite/kernels:test_util",
+        "//tensorflow/lite/kernels/internal:types",
         "@com_google_absl//absl/memory",
         "@com_google_googletest//:gtest",
     ],
@@ -555,6 +559,21 @@ tf_cc_test(
 )
 
 tf_cc_test(
+    name = "ceil_test",
+    size = "small",
+    srcs = ["ceil_test.cc"],
+    tags = [
+        "tflite_not_portable_ios",
+    ],
+    deps = [
+        ":builtin_ops",
+        "//tensorflow/lite:framework",
+        "//tensorflow/lite/kernels:test_util",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+tf_cc_test(
     name = "elementwise_test",
     size = "small",
     srcs = ["elementwise_test.cc"],
@@ -582,9 +601,6 @@ tf_cc_test(
     name = "bidirectional_sequence_rnn_test",
     size = "small",
     srcs = ["bidirectional_sequence_rnn_test.cc"],
-    tags = [
-        "tflite_not_portable",
-    ],
     deps = [
         ":builtin_ops",
         "//tensorflow/lite:framework",
@@ -1230,6 +1246,17 @@ tf_cc_test(
         "//tensorflow/lite:framework",
         "//tensorflow/lite/kernels:test_util",
         "@com_google_googletest//:gtest",
+    ],
+)
+
+tf_cc_test(
+    name = "unique_test",
+    srcs = ["unique_test.cc"],
+    deps = [
+        ":builtin_ops",
+        ":test_util",
+        "//tensorflow/lite:framework",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

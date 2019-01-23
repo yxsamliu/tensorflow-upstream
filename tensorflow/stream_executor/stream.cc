@@ -20,7 +20,6 @@ limitations under the License.
 #include "absl/strings/str_cat.h"
 #include "third_party/eigen3/Eigen/Core"
 #include "tensorflow/stream_executor/blas.h"
-#include "tensorflow/stream_executor/host_buffer.h"
 #include "tensorflow/stream_executor/host_or_device_scalar.h"
 #include "tensorflow/stream_executor/lib/stacktrace.h"
 #include "tensorflow/stream_executor/platform.h"
@@ -94,8 +93,6 @@ string ToVlogString(const void *ptr) {
   out << ptr;
   return out.str();
 }
-
-string ToVlogString(const HostBuffer &buffer) { return buffer.AsString(); }
 
 template <class T>
 string ToVlogString(const std::complex<T> &c) {
@@ -551,10 +548,11 @@ Stream &Stream::ThenConvolveWithScratch(
     if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
       DeviceMemory<uint8> scratch_memory;
       dnn::AlgorithmDesc algorithm_desc;
-      CheckError(dnn->PrepareForConvolution(
-          this, input_descriptor, input_data, filter_descriptor, filter_data,
-          convolution_descriptor, output_descriptor, output, scratch_allocator,
-          dnn::AlgorithmConfig(), &algorithm_desc, &scratch_memory));
+      CheckStatus(dnn->PrepareForConvolution(
+          dnn::ConvolutionKind::FORWARD, this, input_descriptor, input_data,
+          filter_descriptor, filter_data, output_descriptor, *output,
+          convolution_descriptor, dnn::AlgorithmConfig(), scratch_allocator,
+          &algorithm_desc, &scratch_memory));
       CheckError(dnn->DoConvolve(
           this, input_descriptor, input_data, filter_descriptor, filter_data,
           convolution_descriptor, output_descriptor, output, algorithm_desc,
@@ -583,10 +581,11 @@ Stream &Stream::ThenConvolveWithScratch(
     if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
       DeviceMemory<uint8> scratch_memory;
       dnn::AlgorithmDesc algorithm_desc;
-      CheckError(dnn->PrepareForConvolution(
-          this, input_descriptor, input_data, filter_descriptor, filter_data,
-          convolution_descriptor, output_descriptor, output, scratch_allocator,
-          dnn::AlgorithmConfig(), &algorithm_desc, &scratch_memory));
+      CheckStatus(dnn->PrepareForConvolution(
+          dnn::ConvolutionKind::FORWARD, this, input_descriptor, input_data,
+          filter_descriptor, filter_data, output_descriptor, *output,
+          convolution_descriptor, dnn::AlgorithmConfig(), scratch_allocator,
+          &algorithm_desc, &scratch_memory));
       CheckError(dnn->DoConvolve(
           this, input_descriptor, input_data, filter_descriptor, filter_data,
           convolution_descriptor, output_descriptor, output, algorithm_desc,
@@ -770,10 +769,13 @@ Stream &Stream::ThenConvolveWithAlgorithm(
     if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
       DeviceMemory<uint8> scratch_memory;
       dnn::AlgorithmDesc algorithm_desc;
-      auto status = dnn->PrepareForConvolution(
-          this, input_descriptor, input_data, filter_descriptor, filter_data,
-          convolution_descriptor, output_descriptor, output, scratch_allocator,
-          algorithm_config, &algorithm_desc, &scratch_memory);
+      auto status =
+          dnn->PrepareForConvolution(
+                 dnn::ConvolutionKind::FORWARD, this, input_descriptor,
+                 input_data, filter_descriptor, filter_data, output_descriptor,
+                 *output, convolution_descriptor, algorithm_config,
+                 scratch_allocator, &algorithm_desc, &scratch_memory)
+              .ok();
       if (status) {
         status = dnn->DoConvolve(
             this, input_descriptor, input_data, filter_descriptor, filter_data,
@@ -809,10 +811,13 @@ Stream &Stream::ThenConvolveWithAlgorithm(
     if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
       DeviceMemory<uint8> scratch_memory;
       dnn::AlgorithmDesc algorithm_desc;
-      auto status = dnn->PrepareForConvolution(
-          this, input_descriptor, input_data, filter_descriptor, filter_data,
-          convolution_descriptor, output_descriptor, output, scratch_allocator,
-          algorithm_config, &algorithm_desc, &scratch_memory);
+      auto status =
+          dnn->PrepareForConvolution(
+                 dnn::ConvolutionKind::FORWARD, this, input_descriptor,
+                 input_data, filter_descriptor, filter_data, output_descriptor,
+                 *output, convolution_descriptor, algorithm_config,
+                 scratch_allocator, &algorithm_desc, &scratch_memory)
+              .ok();
       if (status) {
         status = dnn->DoConvolve(
             this, input_descriptor, input_data, filter_descriptor, filter_data,
@@ -848,10 +853,13 @@ Stream &Stream::ThenConvolveWithAlgorithm(
     if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
       DeviceMemory<uint8> scratch_memory;
       dnn::AlgorithmDesc algorithm_desc;
-      auto status = dnn->PrepareForConvolution(
-          this, input_descriptor, input_data, filter_descriptor, filter_data,
-          convolution_descriptor, output_descriptor, output, scratch_allocator,
-          algorithm_config, &algorithm_desc, &scratch_memory);
+      auto status =
+          dnn->PrepareForConvolution(
+                 dnn::ConvolutionKind::FORWARD, this, input_descriptor,
+                 input_data, filter_descriptor, filter_data, output_descriptor,
+                 *output, convolution_descriptor, algorithm_config,
+                 scratch_allocator, &algorithm_desc, &scratch_memory)
+              .ok();
       if (status) {
         status = dnn->DoConvolve(
             this, input_descriptor, input_data, filter_descriptor, filter_data,
@@ -1005,11 +1013,12 @@ Stream &Stream::ThenConvolveBackwardDataWithScratch(
     if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
       DeviceMemory<uint8> scratch_memory;
       dnn::AlgorithmDesc algorithm_desc;
-      CheckError(dnn->PrepareForConvolutionBackwardData(
-          this, filter_descriptor, filter_data, output_descriptor,
-          backward_output_data, convolution_descriptor, input_descriptor,
-          backward_input_data, scratch_allocator, dnn::AlgorithmConfig(),
-          &algorithm_desc, &scratch_memory));
+      CheckStatus(dnn->PrepareForConvolution(
+          dnn::ConvolutionKind::BACKWARD_DATA, this, input_descriptor,
+          *backward_input_data, filter_descriptor, filter_data,
+          output_descriptor, backward_output_data, convolution_descriptor,
+          dnn::AlgorithmConfig(), scratch_allocator, &algorithm_desc,
+          &scratch_memory));
       CheckError(dnn->DoConvolveBackwardData(
           this, filter_descriptor, filter_data, output_descriptor,
           backward_output_data, convolution_descriptor, input_descriptor,
@@ -1042,11 +1051,14 @@ Stream &Stream::ThenConvolveBackwardDataWithAlgorithm(
     if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
       DeviceMemory<uint8> scratch_memory;
       dnn::AlgorithmDesc algorithm_desc;
-      auto status = dnn->PrepareForConvolutionBackwardData(
-          this, filter_descriptor, filter_data, output_descriptor,
-          backward_output_data, convolution_descriptor, input_descriptor,
-          backward_input_data, scratch_allocator, algorithm_config,
-          &algorithm_desc, &scratch_memory);
+      auto status =
+          dnn->PrepareForConvolution(
+                 dnn::ConvolutionKind::BACKWARD_DATA, this, input_descriptor,
+                 *backward_input_data, filter_descriptor, filter_data,
+                 output_descriptor, backward_output_data,
+                 convolution_descriptor, algorithm_config, scratch_allocator,
+                 &algorithm_desc, &scratch_memory)
+              .ok();
       if (status) {
         status = dnn->DoConvolveBackwardData(
             this, filter_descriptor, filter_data, output_descriptor,
@@ -1084,11 +1096,14 @@ Stream &Stream::ThenConvolveBackwardDataWithAlgorithm(
     if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
       DeviceMemory<uint8> scratch_memory;
       dnn::AlgorithmDesc algorithm_desc;
-      auto status = dnn->PrepareForConvolutionBackwardData(
-          this, filter_descriptor, filter_data, output_descriptor,
-          backward_output_data, convolution_descriptor, input_descriptor,
-          backward_input_data, scratch_allocator, algorithm_config,
-          &algorithm_desc, &scratch_memory);
+      auto status =
+          dnn->PrepareForConvolution(
+                 dnn::ConvolutionKind::BACKWARD_DATA, this, input_descriptor,
+                 *backward_input_data, filter_descriptor, filter_data,
+                 output_descriptor, backward_output_data,
+                 convolution_descriptor, algorithm_config, scratch_allocator,
+                 &algorithm_desc, &scratch_memory)
+              .ok();
       if (status) {
         status = dnn->DoConvolveBackwardData(
             this, filter_descriptor, filter_data, output_descriptor,
@@ -1126,11 +1141,14 @@ Stream &Stream::ThenConvolveBackwardDataWithAlgorithm(
     if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
       DeviceMemory<uint8> scratch_memory;
       dnn::AlgorithmDesc algorithm_desc;
-      auto status = dnn->PrepareForConvolutionBackwardData(
-          this, filter_descriptor, filter_data, output_descriptor,
-          backward_output_data, convolution_descriptor, input_descriptor,
-          backward_input_data, scratch_allocator, algorithm_config,
-          &algorithm_desc, &scratch_memory);
+      auto status =
+          dnn->PrepareForConvolution(
+                 dnn::ConvolutionKind::BACKWARD_DATA, this, input_descriptor,
+                 *backward_input_data, filter_descriptor, filter_data,
+                 output_descriptor, backward_output_data,
+                 convolution_descriptor, algorithm_config, scratch_allocator,
+                 &algorithm_desc, &scratch_memory)
+              .ok();
       if (status) {
         status = dnn->DoConvolveBackwardData(
             this, filter_descriptor, filter_data, output_descriptor,
@@ -1166,11 +1184,12 @@ Stream &Stream::ThenConvolveBackwardDataWithScratch(
     if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
       DeviceMemory<uint8> scratch_memory;
       dnn::AlgorithmDesc algorithm_desc;
-      CheckError(dnn->PrepareForConvolutionBackwardData(
-          this, filter_descriptor, filter_data, output_descriptor,
-          backward_output_data, convolution_descriptor, input_descriptor,
-          backward_input_data, scratch_allocator, dnn::AlgorithmConfig(),
-          &algorithm_desc, &scratch_memory));
+      CheckStatus(dnn->PrepareForConvolution(
+          dnn::ConvolutionKind::BACKWARD_DATA, this, input_descriptor,
+          *backward_input_data, filter_descriptor, filter_data,
+          output_descriptor, backward_output_data, convolution_descriptor,
+          dnn::AlgorithmConfig(), scratch_allocator, &algorithm_desc,
+          &scratch_memory));
       CheckError(dnn->DoConvolveBackwardData(
           this, filter_descriptor, filter_data, output_descriptor,
           backward_output_data, convolution_descriptor, input_descriptor,
@@ -1215,11 +1234,12 @@ Stream &Stream::ThenConvolveBackwardFilterWithScratch(
     if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
       DeviceMemory<uint8> scratch_memory;
       dnn::AlgorithmDesc algorithm_desc;
-      CheckError(dnn->PrepareForConvolutionBackwardFilter(
-          this, input_descriptor, input_data, output_descriptor,
-          backward_output_data, convolution_descriptor, filter_descriptor,
-          backward_filter_data, scratch_allocator, dnn::AlgorithmConfig(),
-          &algorithm_desc, &scratch_memory));
+      CheckStatus(dnn->PrepareForConvolution(
+          dnn::ConvolutionKind::BACKWARD_FILTER, this, input_descriptor,
+          input_data, filter_descriptor, *backward_filter_data,
+          output_descriptor, backward_output_data, convolution_descriptor,
+          dnn::AlgorithmConfig(), scratch_allocator, &algorithm_desc,
+          &scratch_memory));
       CheckError(dnn->DoConvolveBackwardFilter(
           this, input_descriptor, input_data, output_descriptor,
           backward_output_data, convolution_descriptor, filter_descriptor,
@@ -1252,11 +1272,14 @@ Stream &Stream::ThenConvolveBackwardFilterWithAlgorithm(
     if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
       DeviceMemory<uint8> scratch_memory;
       dnn::AlgorithmDesc algorithm_desc;
-      auto status = dnn->PrepareForConvolutionBackwardFilter(
-          this, input_descriptor, input_data, output_descriptor,
-          backward_output_data, convolution_descriptor, filter_descriptor,
-          backward_filter_data, scratch_allocator, algorithm_config,
-          &algorithm_desc, &scratch_memory);
+      auto status =
+          dnn->PrepareForConvolution(
+                 dnn::ConvolutionKind::BACKWARD_FILTER, this, input_descriptor,
+                 input_data, filter_descriptor, *backward_filter_data,
+                 output_descriptor, backward_output_data,
+                 convolution_descriptor, algorithm_config, scratch_allocator,
+                 &algorithm_desc, &scratch_memory)
+              .ok();
       if (status) {
         status = dnn->DoConvolveBackwardFilter(
             this, input_descriptor, input_data, output_descriptor,
@@ -1294,11 +1317,14 @@ Stream &Stream::ThenConvolveBackwardFilterWithAlgorithm(
     if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
       DeviceMemory<uint8> scratch_memory;
       dnn::AlgorithmDesc algorithm_desc;
-      auto status = dnn->PrepareForConvolutionBackwardFilter(
-          this, input_descriptor, input_data, output_descriptor,
-          backward_output_data, convolution_descriptor, filter_descriptor,
-          backward_filter_data, scratch_allocator, algorithm_config,
-          &algorithm_desc, &scratch_memory);
+      auto status =
+          dnn->PrepareForConvolution(
+                 dnn::ConvolutionKind::BACKWARD_FILTER, this, input_descriptor,
+                 input_data, filter_descriptor, *backward_filter_data,
+                 output_descriptor, backward_output_data,
+                 convolution_descriptor, algorithm_config, scratch_allocator,
+                 &algorithm_desc, &scratch_memory)
+              .ok();
       if (status) {
         status = dnn->DoConvolveBackwardFilter(
             this, input_descriptor, input_data, output_descriptor,
@@ -1334,11 +1360,12 @@ Stream &Stream::ThenConvolveBackwardFilterWithScratch(
     if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
       DeviceMemory<uint8> scratch_memory;
       dnn::AlgorithmDesc algorithm_desc;
-      CheckError(dnn->PrepareForConvolutionBackwardFilter(
-          this, input_descriptor, input_data, output_descriptor,
-          backward_output_data, convolution_descriptor, filter_descriptor,
-          backward_filter_data, scratch_allocator, dnn::AlgorithmConfig(),
-          &algorithm_desc, &scratch_memory));
+      CheckStatus(dnn->PrepareForConvolution(
+          dnn::ConvolutionKind::BACKWARD_FILTER, this, input_descriptor,
+          input_data, filter_descriptor, *backward_filter_data,
+          output_descriptor, backward_output_data, convolution_descriptor,
+          dnn::AlgorithmConfig(), scratch_allocator, &algorithm_desc,
+          &scratch_memory));
       CheckError(dnn->DoConvolveBackwardFilter(
           this, input_descriptor, input_data, output_descriptor,
           backward_output_data, convolution_descriptor, filter_descriptor,
@@ -1371,11 +1398,14 @@ Stream &Stream::ThenConvolveBackwardFilterWithAlgorithm(
     if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
       DeviceMemory<uint8> scratch_memory;
       dnn::AlgorithmDesc algorithm_desc;
-      auto status = dnn->PrepareForConvolutionBackwardFilter(
-          this, input_descriptor, input_data, output_descriptor,
-          backward_output_data, convolution_descriptor, filter_descriptor,
-          backward_filter_data, scratch_allocator, algorithm_config,
-          &algorithm_desc, &scratch_memory);
+      auto status =
+          dnn->PrepareForConvolution(
+                 dnn::ConvolutionKind::BACKWARD_FILTER, this, input_descriptor,
+                 input_data, filter_descriptor, *backward_filter_data,
+                 output_descriptor, backward_output_data,
+                 convolution_descriptor, algorithm_config, scratch_allocator,
+                 &algorithm_desc, &scratch_memory)
+              .ok();
       if (status) {
         status = dnn->DoConvolveBackwardFilter(
             this, input_descriptor, input_data, output_descriptor,
@@ -2063,36 +2093,6 @@ Stream &Stream::ThenMemcpyH2DQuantized(
     if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
       CheckError(dnn->DoMemcpyH2DQuantized(this, host_src, size, mode,
                                            gpu_unquantized_dst));
-    } else {
-      SetErrorAndLogNoDnnSupport();
-    }
-  }
-  return *this;
-}
-
-Stream &Stream::ThenCopyHostBuffer2Device(
-    HostBuffer *buffer_src, DeviceMemory<float> *gpu_unquantized_dst) {
-  VLOG_CALL(PARAM(*buffer_src), PARAM(gpu_unquantized_dst));
-
-  if (ok()) {
-    if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
-      CheckError(
-          dnn->DoCopyHostBuffer2Device(this, buffer_src, gpu_unquantized_dst));
-    } else {
-      SetErrorAndLogNoDnnSupport();
-    }
-  }
-  return *this;
-}
-
-Stream &Stream::ThenCopyDevice2HostBuffer(
-    const DeviceMemory<float> &gpu_unquantized_src, HostBuffer *buffer_dst) {
-  VLOG_CALL(PARAM(gpu_unquantized_src), PARAM(*buffer_dst));
-
-  if (ok()) {
-    if (dnn::DnnSupport *dnn = parent_->AsDnn()) {
-      CheckError(
-          dnn->DoCopyDevice2HostBuffer(this, gpu_unquantized_src, buffer_dst));
     } else {
       SetErrorAndLogNoDnnSupport();
     }
@@ -5863,6 +5863,15 @@ string Stream::DebugStreamPointers() const {
   // Relies on the ToVlogString(const void*) overload above.
   return absl::StrCat("[stream=", ToVlogString(this),
                       ",impl=", ToVlogString(implementation_.get()), "]");
+}
+
+void Stream::CheckStatus(port::Status status) {
+  if (status.ok()) {
+    return;
+  }
+  LOG(ERROR) << status;
+  mutex_lock lock(mu_);
+  ok_ = false;
 }
 
 }  // namespace stream_executor
