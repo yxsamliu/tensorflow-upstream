@@ -63,6 +63,13 @@ cc_library(
 )
 
 config_setting(
+    name = "aarch64",
+    values = {
+        "cpu": "aarch64",
+    },
+)
+
+config_setting(
     name = "arm",
     values = {
         "cpu": "arm",
@@ -311,6 +318,8 @@ cc_library(
         "reference/integer_ops/depthwise_conv.h",
         "reference/integer_ops/dequantize.h",
         "reference/integer_ops/fully_connected.h",
+        "reference/integer_ops/l2normalization.h",
+        "reference/integer_ops/log_softmax.h",
         "reference/integer_ops/logistic.h",
         "reference/integer_ops/mul.h",
         "reference/integer_ops/pooling.h",
@@ -497,6 +506,9 @@ cc_library(
         "//tensorflow/lite/kernels:op_macros",
         "@gemmlowp",
     ] + select({
+        ":aarch64": [
+            ":neon_tensor_utils",
+        ],
         ":arm": [
             ":neon_tensor_utils",
         ],
@@ -652,7 +664,7 @@ cc_test(
     srcs = [
         "logsoftmax_quantized_test.cc",
     ],
-    shard_count = 3,
+    shard_count = 4,
     tags = [
         # TODO(b/122242739): Reenable after fixing the flakiness?
         "nomac",

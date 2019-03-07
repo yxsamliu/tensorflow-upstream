@@ -222,7 +222,8 @@ Offset<Vector<Offset<Tensor>>> ExportTensors(
 
     std::vector<int> shape;
     if (array.has_shape()) {
-      for (int d : array.shape().dims()) {
+      shape.reserve(array.shape().dims().size());
+      for (const auto& d : array.shape().dims()) {
         shape.push_back(d);
       }
     }
