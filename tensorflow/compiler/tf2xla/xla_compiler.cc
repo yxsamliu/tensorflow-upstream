@@ -92,14 +92,14 @@ ComputeArgAndRetvalCores(const Graph& graph) {
   std::map<int, int> arg_cores;
   std::map<int, int> retval_cores;
   for (const Node* n : graph.nodes()) {
-    if (n->type_string() == FunctionLibraryDefinition::kArgOp) {
+    if (n->IsArg()) {
       TF_ASSIGN_OR_RETURN(int core, get_sharding_for_node(n));
       if (core < 0) continue;
       int index;
       TF_RETURN_IF_ERROR(GetNodeAttr(n->attrs(), "index", &index));
       TF_RET_CHECK(index >= 0) << "Negative _Arg index";
       arg_cores[index] = core;
-    } else if (n->type_string() == FunctionLibraryDefinition::kRetOp) {
+    } else if (n->IsRetval()) {
       TF_ASSIGN_OR_RETURN(int core, get_sharding_for_node(n));
       if (core < 0) continue;
       int index;
@@ -436,11 +436,10 @@ XlaCompiler::XlaCompiler(XlaCompiler::Options options)
                                                       FunctionDefLibrary{}));
   local_pflr_.reset(new ProcessFunctionLibraryRuntime(
       &device_mgr_, Env::Default(), options.graph_def_version,
-      local_flib_def_.get(), OptimizerOptions(),
-      nullptr /* custom_kernel_creator */));
+      local_flib_def_.get(), OptimizerOptions()));
   pflr_.reset(new ProcessFunctionLibraryRuntime(
       &device_mgr_, Env::Default(), options.graph_def_version, options.flib_def,
-      OptimizerOptions(), nullptr /* custom_kernel_creator */));
+      OptimizerOptions()));
 
   local_flib_runtime_ = local_pflr_->GetFLR(device_->name());
   flib_runtime_ = pflr_->GetFLR(device_->name());
@@ -581,16 +580,14 @@ Status XlaCompiler::CompileFunction(
   // lowest-numbered core that consumes the argument. We choose the
   // lowest-numbered core so the assignment is deterministic.
   for (Node* n : graph->nodes()) {
-    if (absl::string_view(n->type_string()) ==
-        FunctionLibraryDefinition::kArgOp) {
+    if (n->IsArg()) {
       TF_RETURN_IF_ERROR(SetNodeShardingFromNeighbors(n, /*out_edges=*/true));
     }
   }
   // Do _Retval as a second loop, in case the retval's input is an _Arg (which
   // may have gotten a device assignment from the first loop).
   for (Node* n : graph->nodes()) {
-    if (absl::string_view(n->type_string()) ==
-        FunctionLibraryDefinition::kRetOp) {
+    if (n->IsRetval()) {
       TF_RETURN_IF_ERROR(SetNodeShardingFromNeighbors(n, /*out_edges=*/false));
     }
   }
@@ -956,6 +953,28 @@ Status ValidateFunctionDef(const FunctionDef* fdef,
   return Status::OK();
 }
 
+// If node is PartitionedCall or StatefulPartitionedCall, returns the
+// name from the "f" attr, else returns node.def().op().
+// Returned pointer points to the internal string either in node's attributes
+// or in its NodeDef. This pointer is valid as long as the node has not been
+// modified.
+Status GetPotentialFunctionName(const Node& node, const string** name) {
+  if (node.IsPartitionedCall()) {
+    const AttrValue* attr_value;
+    TF_RETURN_IF_ERROR(
+        node.attrs().Find(FunctionLibraryDefinition::kFuncAttr, &attr_value));
+    if (!attr_value->has_func()) {
+      return errors::InvalidArgument(
+          "The attribute value for attribute 'f' in node ", node.DebugString(),
+          " does not have 'func' field set");
+    }
+    *name = &attr_value->func().name();
+    return Status::OK();
+  }
+  *name = &node.type_string();
+  return Status::OK();
+}
+
 // Check that the graph doesn't have any invalid nodes (e.g. incompatible with
 // given device_type, invalid data type, missing attributes...)
 Status ValidateGraph(const Graph* graph,
@@ -975,7 +994,9 @@ Status ValidateGraph(const Graph* graph,
     if (node->type_string() == FunctionLibraryDefinition::kGradientOp) {
       continue;
     }
-    const FunctionDef* fdef = flib_def.Find(node->def().op());
+    const string* function_name;
+    TF_RETURN_IF_ERROR(GetPotentialFunctionName(*node, &function_name));
+    const FunctionDef* fdef = flib_def.Find(*function_name);
     Status s;
     if (fdef) {
       s = ValidateFunctionDef(fdef, flib_def);

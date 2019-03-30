@@ -35,6 +35,7 @@ import re
 import sys
 
 from setuptools import Command
+from setuptools import Extension
 from setuptools import find_packages
 from setuptools import setup
 from setuptools.command.install import install as InstallCommandBase
@@ -134,8 +135,8 @@ class InstallCommand(InstallCommandBase):
 
   def finalize_options(self):
     ret = InstallCommandBase.finalize_options(self)
-    self.install_headers = os.path.join(self.install_purelib, 'tensorflow_core',
-                                        'include')
+    self.install_headers = os.path.join(self.install_purelib,
+                                        'tensorflow', 'include')
     return ret
 
 
@@ -172,14 +173,14 @@ class InstallHeaders(Command):
     # directories for -I
     install_dir = re.sub('/google/protobuf_archive/src', '', install_dir)
 
-    # Copy external code headers into tensorflow_core/include.
+    # Copy external code headers into tensorflow/include.
     # A symlink would do, but the wheel file that gets created ignores
     # symlink within the directory hierarchy.
     # NOTE(keveman): Figure out how to customize bdist_wheel package so
     # we can do the symlink.
     external_header_locations = [
-        'tensorflow_core/include/external/eigen_archive/',
-        'tensorflow_core/include/external/com_google_absl/',
+        'tensorflow/include/external/eigen_archive/',
+        'tensorflow/include/external/com_google_absl/',
     ]
     for location in external_header_locations:
       if location in install_dir:
@@ -271,6 +272,13 @@ setup(
         'install_headers': InstallHeaders,
         'install': InstallCommand,
     },
+    # Make setup aware this is an extension that cannot go into purelib.
+    ext_modules=[
+        Extension(
+            name='tensorflow',
+            sources=[],
+        )
+    ],
     # PyPI package information.
     classifiers=[
         'Development Status :: 5 - Production/Stable',
