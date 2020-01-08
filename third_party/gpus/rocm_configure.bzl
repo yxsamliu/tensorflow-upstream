@@ -793,6 +793,10 @@ def _create_local_rocm_repository(repository_ctx):
         "-D__HIP_PLATFORM_HCC__",
         "-DEIGEN_USE_HIP",
     ] + _if_hipcc_is_hipclang(repository_ctx, rocm_config, [
+        # HIP-Clang is required to include hip/hip_runtime.h before other
+        # header files for supporting std::complex. To avoid changing large
+        # number of files we include hip/hip_runtime.h by default.
+        "--include=hip/hip_runtime.h",
         #
         # define "TENSORFLOW_COMPILER_IS_HIP_CLANG" when we are using clang
         # based hipcc to compile/build tensorflow
